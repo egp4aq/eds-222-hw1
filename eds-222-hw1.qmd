@@ -1,8 +1,16 @@
 ---
 title: "EDS 222: Homework 1"
-date: "Assigned ???, due ???"
-author: "Your Name Here"
+date: "Due 10/14/24"
+author: "Liz Peterson"
+editor_options: 
+  chunk_output_type: console
 ---
+
+```{r}
+# load in packages
+library(here)
+library(tidyverse)
+```
 
 ## Background
 
@@ -33,22 +41,54 @@ crowdsourced <- readRDS(file.path("data", "airpol-PK-crowdsourced.RDS"))
 govt <- readRDS(file.path("data", "airpol-PK-govt.RDS"))
 ```
 
+```{r}
+crowdsourced <- readRDS(here("data", "airpol-PK-crowdsourced.RDS"))
+govt <- readRDS(here("data", "airpol-PK-govt.RDS"))
+```
+
 ::: callout-warning
 There's an implicit assumption about file organization in the code above. What is it? How can you make the code work?
 :::
 
+The file organization above assumes that when we downloaded the data from cyberduck we put it in a data folder that we created and put in our repository. I made the code work by creating a data folder, and I used the here library to navigate to that folder in my current working directory.
+
 1.  These dataframes have one row per pollution observation. How many pollution records are in each dataset?
+
+```{r}
+nrow(crowdsourced)
+nrow(govt)
+```
+
+There are 5488 pollution records in the crowd-sourced dataframe, and there are 1960 pollution records in the govt dataframe.
+
 2.  Each monitor is located at a unique latitude and longitude location. How many unique monitors are in each dataset?
+
+```{r}
+unique_monitors_crowd <- crowdsourced %>%
+  group_by(longitude, latitude) %>%
+  summarise(n = cur_group_id())
+
+unique_monitors_govt <- govt %>%
+  group_by(longitude, latitude) %>%
+  summarise(n = cur_group_id())
+ 
+print(nrow(unique_monitors_crowd))
+print(nrow(unique_monitors_govt))
+```
 
 ::: callout-tip
 `group_by(longitude,latitude)` and `cur_group_id()` in `dplyr` will help in creating a unique identifier for each (longitude, latitude) pair.
 :::
+
+The crowd-sourced data has 14 unique monitors, and the government data has 5 unique monitors.
 
 ### Question 2
 
 The goal of pollution monitoring in Lahore is to measure the average pollution conditions across the city.
 
 1.  What is the *population* in this setting? Please be precise.
+
+    The population in this Lahore
 
 2.  What are the *samples* in this setting? Please be precise.
 
@@ -57,8 +97,26 @@ The goal of pollution monitoring in Lahore is to measure the average pollution c
 ### Question 3
 
 1.  For both the government data and the crowd-sourced data, report the sample mean, sample minimum, and sample maximum value of PM 2.5 (measured in $\mu g/m^3$).
+
+    ```{r}
+    mean(crowdsourced$PM)
+    min(crowdsourced$PM)
+    max(crowdsourced$PM)
+
+    mean(govt$PM)
+    min(govt$PM)
+    max(govt$PM)
+    ```
+
+    For the crowd-sourced data, the sample mean is 70.2008 $\mu g/m^3$, the sample minimum is 20 $\mu g/m^3$, and the sample maximum is 120 $\mu g/m^3$. For the government data, the sample mean is 39.64694 $\mu g/m^3$, the sample minimum is 15 $\mu g/m^3$, and the sample maximum is 65 $\mu g/m^3$.
+
 2.  Discuss any key differences that you see between these two samples.
+
+    The mean for the crowd-sourced data is much higher, which makes sense considering the maximum for the crowd-sourced data is almost double the maximum for the government data.
+
 3.  Are the differences in mean pollution as expected, given what we know about the sampling strategies?
+
+    The differences are as expected when we look at the sampling strategies. The government reportedly placed monitors in areas with cleaner air in order to "mitigate domestic and international pressure to clean up the air."
 
 ### Question 4
 
@@ -67,6 +125,20 @@ Use the location of the air pollution stations for both of the sampling strategi
 ::: callout-tip
 `longitude` indicates location in the *x*-direction, while `latitude` indicates location in the *y*-direction. With `ggplot2` this should be nothing fancy. We'll do more spatial data in `R` later in the course.
 :::
+
+```{r}
+ggplot() +
+  geom_point(data = crowdsourced,
+             aes(x = longitude, y = latitude, color = "Crowd-sourced data")) +
+  geom_point(data = govt,
+             aes(x = longitude, y = latitude, color = "Government data")) +
+  scale_color_manual("Monitor type", values = c("Crowd-sourced data" = "red", "Government data" = "blue")) +
+  labs(title = "Location of observations",
+       x = "Longitude",
+       y = "Latitude")
+```
+
+# use geom_point here
 
 ### Question 5
 
