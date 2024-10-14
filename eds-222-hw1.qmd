@@ -88,11 +88,15 @@ The goal of pollution monitoring in Lahore is to measure the average pollution c
 
 1.  What is the *population* in this setting? Please be precise.
 
-    The population in this Lahore
+    The population in this Lahore would be the entire city's pollution levels, regardless of location.
 
 2.  What are the *samples* in this setting? Please be precise.
 
+    The samples in this setting are the specific monitors placed by either the people who volunteered to have one placed in their home or placed in specific locations decided by the government.
+
 3.  These samples were not randomly collected from across locations in Lahore. Given the sampling approaches described above, discuss possible biases that may enter when we use these samples to construct estimates of population parameters.
+
+    There are two pitfalls for possible bias in these sampling locations. First, the people who volunteer to have these monitors in their homes are likely people who would be willing to work to lower their pollution. Additionally, the government decided to place monitors in locations that had lower pollution levels to make themselves look better.
 
 ### Question 3
 
@@ -144,6 +148,8 @@ ggplot() +
 
 The local newspaper in Pakistan, *Dawn*, claims that the government is misreporting the air pollution levels in Lahore. Do the locations of monitors in question 4, relative to crowd-sourced monitors, suggest anything about a possible political bias?
 
+There could certainly be a political bias present, considering the way that the government placed their monitors to avoid having to actually solve any pollution problems. This could favor those not actually afflicted by the rising pollution levels.
+
 ### Question 6
 
 Given the recent corruption in air quality reporting, the Prime Minister of Pakistan has hired an independent body of environmental data scientists to create an unbiased estimate of the mean PM 2.5 across Lahore using some combination of both government stations and crowd sourced observations.
@@ -158,8 +164,26 @@ First, generate a *random sample* of size $n=1000$ air pollution records by (i) 
 `bind_rows()` may be helpful.
 :::
 
+```{r}
+pooled_df <- bind_rows(crowdsourced, govt)
+```
+
 Second, create a *stratified random sample*. Do so by (i) stratifying your pooled data-set into strata of 0.01 degrees of latitude, and (ii) randomly sampling 200 air pollution observations from each stratum.
+
+```{r}
+# round
+round_pooled <- pooled_df %>%
+  mutate(lat_round = round(latitude, digits = 2))
+
+strata_pooled <- round_pooled %>%
+  slice_sample(n = 200, replace = FALSE, by = lat_round)
+
+ggplot(strata_pooled) +
+  geom_bar(aes(x = lat_round))
+```
 
 #### Question 6.2
 
 Compare estimated means of PM 2.5 for each sampling strategy to the NASA estimate of 89.2 $\mu g/m^3$. Which sample seems to match the satellite data best? What would you recommend the Prime Minister do? Does your proposed sampling strategy rely more on government or on crowd-sourced data? Why might that be the case?
+
+The sample mean of the crowd-sourced data is closer to the NASA estimate, as it is 70.20 $\mu g/m^3$, while the government data is 39.65 $\mu g/m^3$. I recommend that the Prime Minister relies more heavily on the crowd-sourced data than the government data.
