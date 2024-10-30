@@ -88,11 +88,11 @@ The goal of pollution monitoring in Lahore is to measure the average pollution c
 
 1.  What is the *population* in this setting? Please be precise.
 
-    The population in this Lahore would be the entire city's pollution levels, regardless of location.
+    The population in this Lahore would be the entire city's pollution levels, regardless of location. Additionally, the population is specifically the data from November 2018 to November 2019.
 
 2.  What are the *samples* in this setting? Please be precise.
 
-    The samples in this setting are the specific monitors placed by either the people who volunteered to have one placed in their home or placed in specific locations decided by the government.
+    The samples in this setting are the crowd-sourced data and the government sourced data.
 
 3.  These samples were not randomly collected from across locations in Lahore. Given the sampling approaches described above, discuss possible biases that may enter when we use these samples to construct estimates of population parameters.
 
@@ -120,7 +120,7 @@ The goal of pollution monitoring in Lahore is to measure the average pollution c
 
 3.  Are the differences in mean pollution as expected, given what we know about the sampling strategies?
 
-    The differences are as expected when we look at the sampling strategies. The government reportedly placed monitors in areas with cleaner air in order to "mitigate domestic and international pressure to clean up the air."
+    The differences are as expected when we look at the sampling strategies. The government reportedly placed monitors in areas with cleaner air in order to "mitigate domestic and international pressure to clean up the air." Additionally, there is bias in the crowd-sourced data because we can assume that the kind of person who would volunteer to have this monitor placed near them might already have some more consciousness about pollution.
 
 ### Question 4
 
@@ -165,7 +165,15 @@ First, generate a *random sample* of size $n=1000$ air pollution records by (i) 
 :::
 
 ```{r}
+# Add in column of to show where the data is coming from for 6.2
+crowdsourced$kind <- "crowdsourced"
+govt$kind <- "government"
 pooled_df <- bind_rows(crowdsourced, govt)
+
+rand_pooled_samp <- pooled_df %>%
+  sample_n(1000)
+
+dim(rand_pooled_samp)
 ```
 
 Second, create a *stratified random sample*. Do so by (i) stratifying your pooled data-set into strata of 0.01 degrees of latitude, and (ii) randomly sampling 200 air pollution observations from each stratum.
@@ -178,6 +186,8 @@ round_pooled <- pooled_df %>%
 strata_pooled <- round_pooled %>%
   slice_sample(n = 200, replace = FALSE, by = lat_round)
 
+print(dim(strata_pooled))
+
 ggplot(strata_pooled) +
   geom_bar(aes(x = lat_round))
 ```
@@ -186,4 +196,23 @@ ggplot(strata_pooled) +
 
 Compare estimated means of PM 2.5 for each sampling strategy to the NASA estimate of 89.2 $\mu g/m^3$. Which sample seems to match the satellite data best? What would you recommend the Prime Minister do? Does your proposed sampling strategy rely more on government or on crowd-sourced data? Why might that be the case?
 
-The sample mean of the crowd-sourced data is closer to the NASA estimate, as it is 70.20 $\mu g/m^3$, while the government data is 39.65 $\mu g/m^3$. I recommend that the Prime Minister relies more heavily on the crowd-sourced data than the government data.
+```{r}
+mean_rand_samp <- mean(rand_pooled_samp$PM)
+
+mean_strat_samp <- mean(strata_pooled$PM)
+
+print(mean_rand_samp)
+print(mean_strat_samp)
+```
+
+```{r}
+strata_govt <- strata_pooled %>%
+  filter(kind == "government")
+strata_cs <- strata_pooled %>%
+  filter(kind == "crowdsourced")
+
+print(dim(strata_govt))
+print(dim(strata_cs))
+```
+
+When doing a random sample of 1000 observations over a pooled data frame of both government sourced and crowd sourced data, the mean of PM 2.5 is 61.28. For a stratified random sample of the same, the mean of PM 2.5 is 67.31. This shows that the stratified random sample would be closer to the actual satellite data. Therefore, relying on this data would be better. Within the stratified sample, we see that 905 observations are coming from crowd sourced data monitors while only 95 are coming from those government monitors. This could be due to the bias discussed above.
